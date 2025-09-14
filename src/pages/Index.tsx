@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import FeatureSection from "@/components/FeatureSection";
@@ -25,10 +28,38 @@ const Index = () => {
   const [currentView, setCurrentView] = useState<AppState>('hero');
   const [isProcessing, setIsProcessing] = useState(false);
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleGetStarted = () => {
-    setCurrentView('upload');
+    // Check if user is authenticated
+    if (session && user) {
+      // Redirect to dashboard if already logged in
+      navigate('/dashboard');
+    } else {
+      // Redirect to auth page if not logged in
+      navigate('/auth');
+    }
   };
 
   const simulateAIProcessing = async (content: string): Promise<DocumentAnalysis> => {
