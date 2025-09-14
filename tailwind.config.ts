@@ -43,11 +43,13 @@ export default {
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-hero': 'var(--gradient-hero)',
+        'gradient-neutral': 'var(--gradient-neutral)',
       },
       boxShadow: {
         'elegant': 'var(--shadow-elegant)',
         'card': 'var(--shadow-card)',
         'feature': 'var(--shadow-feature)',
+        'subtle': 'var(--shadow-subtle)',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -84,6 +86,12 @@ export default {
           foreground: "hsl(var(--card-foreground))",
           dark: "hsl(var(--card-dark))",
           "dark-foreground": "hsl(var(--card-dark-foreground))",
+        },
+        neutral: {
+          DEFAULT: "hsl(var(--neutral))",
+          foreground: "hsl(var(--neutral-foreground))",
+          dark: "hsl(var(--neutral-dark))",
+          "dark-foreground": "hsl(var(--neutral-dark-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

@@ -29,6 +29,12 @@ All colors MUST be HSL.
     --accent: 210 40% 98%;
     --accent-foreground: 221 39% 11%;
 
+    /* Neutral color variants */
+    --neutral: 220 14% 96%;
+    --neutral-foreground: 220 9% 46%;
+    --neutral-dark: 220 13% 18%;
+    --neutral-dark-foreground: 0 0% 98%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
@@ -41,9 +47,11 @@ All colors MUST be HSL.
     /* Custom design tokens */
     --gradient-primary: linear-gradient(135deg, hsl(159 100% 41%), hsl(159 100% 45%));
     --gradient-hero: linear-gradient(135deg, hsl(159 100% 41%), hsl(159 100% 35%));
+    --gradient-neutral: linear-gradient(135deg, hsl(220 14% 96%), hsl(210 40% 98%));
     --shadow-elegant: 0 20px 40px -12px hsl(159 100% 41% / 0.25);
     --shadow-card: 0 4px 16px -4px hsl(210 40% 10% / 0.1);
     --shadow-feature: 0 8px 32px -8px hsl(210 40% 10% / 0.15);
+    --shadow-subtle: 0 2px 8px -2px hsl(220 13% 18% / 0.08);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Dark feature cards */
@@ -91,6 +99,12 @@ All colors MUST be HSL.
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+
+    /* Dark mode neutral colors */
+    --neutral: 215 27.9% 16.9%;
+    --neutral-foreground: 217.9 10.6% 64.9%;
+    --neutral-dark: 224 71% 4%;
+    --neutral-dark-foreground: 0 0% 98%;
 
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;

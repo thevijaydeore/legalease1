@@ -18,6 +18,7 @@ const buttonVariants = cva(
         hero: "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-elegant hover:scale-[1.02] transition-all duration-300 text-base font-semibold",
         upload: "border-2 border-dashed border-primary/30 bg-primary/5 text-primary hover:border-primary/50 hover:bg-primary/10 transition-all duration-300",
         clean: "bg-white text-foreground border border-input hover:bg-accent hover:text-accent-foreground transition-all duration-200",
+        neutral: "bg-neutral text-neutral-foreground hover:bg-neutral-dark hover:text-neutral-dark-foreground transition-all duration-200 shadow-subtle",
       },
       size: {
         default: "h-10 px-4 py-2",
