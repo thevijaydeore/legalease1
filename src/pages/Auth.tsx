@@ -24,9 +24,9 @@ const Auth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Redirect authenticated users to home
+        // Redirect authenticated users to upload page
         if (session?.user) {
-          navigate('/');
+          navigate('/upload');
         }
       }
     );
@@ -38,7 +38,7 @@ const Auth = () => {
       
       // Redirect if already authenticated
       if (session?.user) {
-        navigate('/');
+        navigate('/upload');
       }
     });
 
@@ -184,7 +184,7 @@ const Auth = () => {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/upload')}
                   disabled={loading}
                 >
                   Continue as Guest

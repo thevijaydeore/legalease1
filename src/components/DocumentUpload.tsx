@@ -7,9 +7,10 @@ import { Upload, FileText, Loader2 } from "lucide-react";
 interface DocumentUploadProps {
   onProcessDocument: (content: string) => void;
   isProcessing: boolean;
+  onBackToHome?: () => void;
 }
 
-const DocumentUpload = ({ onProcessDocument, isProcessing }: DocumentUploadProps) => {
+const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: DocumentUploadProps) => {
   const [uploadMethod, setUploadMethod] = useState<'upload' | 'paste'>('upload');
   const [textContent, setTextContent] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -58,6 +59,11 @@ const DocumentUpload = ({ onProcessDocument, isProcessing }: DocumentUploadProps
             <p className="text-xl text-muted-foreground">
               Choose how you'd like to provide your document for analysis
             </p>
+            {onBackToHome && (
+              <Button variant="ghost" onClick={onBackToHome} className="mt-4">
+                ← Back to Home
+              </Button>
+            )}
           </div>
 
           <div className="flex justify-center mb-8">
