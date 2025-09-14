@@ -62,9 +62,9 @@ export function DocumentUploadModal({ open, onOpenChange }: DocumentUploadModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-lg sm:text-xl">
             {processedContent ? "Analysis Results" : "Upload Document for Analysis"}
           </DialogTitle>
         </DialogHeader>

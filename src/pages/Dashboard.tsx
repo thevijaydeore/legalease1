@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardOverview } from "@/components/DashboardOverview";
 import { DocumentGrid } from "@/components/DocumentGrid";
@@ -71,7 +71,19 @@ const Dashboard = () => {
           onOpenUploadModal={() => setUploadModalOpen(true)}
         />
         <main className="flex-1 overflow-auto">
-          <div className="container mx-auto p-6">
+          {/* Mobile Header */}
+          <div className="sticky top-0 z-40 md:hidden bg-background border-b px-4 py-3">
+            <div className="flex items-center justify-between">
+              <h1 className="text-lg font-semibold">
+                {activeView === 'overview' ? 'Dashboard' : 
+                 activeView === 'documents' ? 'Documents' : 
+                 activeView === 'profile' ? 'Profile' : 'Dashboard'}
+              </h1>
+              <SidebarTrigger />
+            </div>
+          </div>
+          
+          <div className="container mx-auto p-4 md:p-6">
             {renderActiveView()}
           </div>
         </main>

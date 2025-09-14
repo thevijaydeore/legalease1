@@ -90,15 +90,15 @@ export function DashboardOverview({ user, onOpenUploadModal }: DashboardOverview
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <Button onClick={onOpenUploadModal} className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Button onClick={onOpenUploadModal} className="flex items-center gap-2 w-full sm:w-auto">
               <Upload className="h-4 w-4" />
               Analyze New Document
             </Button>
             <Button 
               variant="outline" 
               onClick={() => navigate("/dashboard?view=documents")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto"
             >
               <FileText className="h-4 w-4" />
               View All Documents

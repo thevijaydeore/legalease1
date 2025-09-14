@@ -181,8 +181,8 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+        <div className="relative flex-1 max-w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search documents..."
@@ -192,7 +192,7 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue />
           </SelectTrigger>
@@ -224,7 +224,7 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredDocuments.map((doc) => (
             <Card key={doc.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
@@ -243,33 +243,34 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
                   <div>Uploaded: {new Date(doc.upload_date).toLocaleDateString()}</div>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button size="sm" variant="outline" className="flex-1">
                     <Eye className="h-3 w-3 mr-1" />
                     View
                   </Button>
-                  <Button size="sm" variant="outline" disabled={doc.analysis_status !== "completed"}>
+                  <Button size="sm" variant="outline" disabled={doc.analysis_status !== "completed"} className="flex-1">
                     <Download className="h-3 w-3 mr-1" />
                     Export
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-3 w-3" />
+                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive w-full sm:w-auto">
+                        <Trash2 className="h-3 w-3 mr-1 sm:mr-0" />
+                        <span className="sm:hidden">Delete</span>
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="mx-4">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Document</AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to delete "{doc.title}"? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                        <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => handleDeleteDocument(doc.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto"
                         >
                           Delete
                         </AlertDialogAction>

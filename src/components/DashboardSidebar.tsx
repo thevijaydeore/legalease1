@@ -1,4 +1,4 @@
-import { Home, FileText, User, Upload, Settings, LogOut } from "lucide-react";
+import { Home, FileText, User, Upload, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -50,10 +51,10 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
   };
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
+    <Sidebar className="border-r" collapsible="icon" variant="inset">
       <SidebarContent>
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">L</span>
             </div>
@@ -61,6 +62,7 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
               <h1 className="text-xl font-bold">LegalEase</h1>
             )}
           </div>
+          <SidebarTrigger className="md:hidden" />
         </div>
 
         <SidebarGroup>
