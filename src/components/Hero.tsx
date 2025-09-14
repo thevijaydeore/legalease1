@@ -7,12 +7,11 @@ const Hero = ({ onGetStarted }: { onGetStarted: () => void }) => {
       <div className="container mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Simplify Legal Documents with AI
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Understand <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Any Legal Document</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-              Transform complex legal jargon into clear, actionable insights in seconds. 
-              Understand your contracts, leases, and agreements without the legal expertise.
+              Your AI-powered legal assistant that simplifies complex agreements into clear, actionable insights.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button 
@@ -21,14 +20,7 @@ const Hero = ({ onGetStarted }: { onGetStarted: () => void }) => {
                 onClick={onGetStarted}
                 className="text-lg px-8 py-6"
               >
-                Get Started Free
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="text-lg px-8 py-6"
-              >
-                See How It Works
+                Try LegalEase
               </Button>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground justify-center lg:justify-start">

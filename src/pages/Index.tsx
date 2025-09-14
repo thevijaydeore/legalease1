@@ -1,5 +1,10 @@
 import { useState } from "react";
 import Hero from "@/components/Hero";
+import FeatureSection from "@/components/FeatureSection";
+import PrivacySection from "@/components/PrivacySection";
+import UseCasesSection from "@/components/UseCasesSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import Footer from "@/components/Footer";
 import DocumentUpload from "@/components/DocumentUpload";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import { useToast } from "@/hooks/use-toast";
@@ -113,7 +118,14 @@ const Index = () => {
   return (
     <main className="min-h-screen">
       {currentView === 'hero' && (
-        <Hero onGetStarted={handleGetStarted} />
+        <>
+          <Hero onGetStarted={handleGetStarted} />
+          <FeatureSection />
+          <PrivacySection />
+          <UseCasesSection />
+          <TestimonialsSection />
+          <Footer />
+        </>
       )}
       {currentView === 'upload' && (
         <DocumentUpload 
