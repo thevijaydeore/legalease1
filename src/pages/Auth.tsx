@@ -218,7 +218,27 @@ const Auth = () => {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={handleContinueAsGuest}
+                  onClick={() => {
+                    setLoading(true);
+                    try {
+                      const guestSession = guestAuth.signInAsGuest();
+                      setSession(guestSession.session);
+                      setUser(guestSession.user);
+                      toast({
+                        title: "Welcome, Guest!",
+                        description: "You're now using LegalEase as a guest user.",
+                      });
+                      navigate('/dashboard');
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to create guest session. Please try again.",
+                        variant: "destructive"
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
                   disabled={loading}
                 >
                   Continue as Guest
