@@ -14,7 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      document_analytics: {
+        Row: {
+          action: string
+          document_id: string | null
+          id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          document_id?: string | null
+          id?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          document_id?: string | null
+          id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_analytics_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          analysis_results: Json | null
+          analysis_status: string
+          created_at: string
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string
+          original_filename: string
+          title: string
+          updated_at: string
+          upload_date: string
+          user_id: string
+        }
+        Insert: {
+          analysis_results?: Json | null
+          analysis_status?: string
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          original_filename: string
+          title: string
+          updated_at?: string
+          upload_date?: string
+          user_id: string
+        }
+        Update: {
+          analysis_results?: Json | null
+          analysis_status?: string
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          original_filename?: string
+          title?: string
+          updated_at?: string
+          upload_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          full_name: string | null
+          id: string
+          profile_picture_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          full_name?: string | null
+          id?: string
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          full_name?: string | null
+          id?: string
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

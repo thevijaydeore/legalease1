@@ -24,9 +24,9 @@ const Auth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Redirect authenticated users to upload page
+        // Redirect authenticated users to dashboard
         if (session?.user) {
-          navigate('/upload');
+          navigate('/dashboard');
         }
       }
     );
@@ -38,7 +38,7 @@ const Auth = () => {
       
       // Redirect if already authenticated
       if (session?.user) {
-        navigate('/upload');
+        navigate('/dashboard');
       }
     });
 
