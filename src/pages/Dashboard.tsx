@@ -7,12 +7,14 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardOverview } from "@/components/DashboardOverview";
 import { DocumentGrid } from "@/components/DocumentGrid";
 import { ProfileSettings } from "@/components/ProfileSettings";
+import { DocumentUploadModal } from "@/components/DocumentUploadModal";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState("overview");
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -50,25 +52,33 @@ const Dashboard = () => {
   const renderActiveView = () => {
     switch (activeView) {
       case "overview":
-        return <DashboardOverview user={user} />;
+        return <DashboardOverview user={user} onOpenUploadModal={() => setUploadModalOpen(true)} />;
       case "documents":
         return <DocumentGrid user={user} />;
       case "profile":
         return <ProfileSettings user={user} />;
       default:
-        return <DashboardOverview user={user} />;
+        return <DashboardOverview user={user} onOpenUploadModal={() => setUploadModalOpen(true)} />;
     }
   };
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar activeView={activeView} onViewChange={setActiveView} />
+        <DashboardSidebar 
+          activeView={activeView} 
+          onViewChange={setActiveView}
+          onOpenUploadModal={() => setUploadModalOpen(true)}
+        />
         <main className="flex-1 overflow-auto">
           <div className="container mx-auto p-6">
             {renderActiveView()}
           </div>
         </main>
+        <DocumentUploadModal 
+          open={uploadModalOpen} 
+          onOpenChange={setUploadModalOpen}
+        />
       </div>
     </SidebarProvider>
   );

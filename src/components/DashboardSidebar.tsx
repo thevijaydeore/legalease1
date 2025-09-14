@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 interface DashboardSidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
+  onOpenUploadModal: () => void;
 }
 
 const menuItems = [
@@ -26,7 +27,7 @@ const menuItems = [
   { id: "profile", title: "Profile", icon: User },
 ];
 
-export function DashboardSidebar({ activeView, onViewChange }: DashboardSidebarProps) {
+export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
@@ -45,7 +46,7 @@ export function DashboardSidebar({ activeView, onViewChange }: DashboardSidebarP
   };
 
   const handleNewUpload = () => {
-    navigate("/upload");
+    onOpenUploadModal();
   };
 
   return (

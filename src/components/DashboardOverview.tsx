@@ -9,6 +9,7 @@ import { QuickStats } from "@/components/QuickStats";
 
 interface DashboardOverviewProps {
   user: User;
+  onOpenUploadModal: () => void;
 }
 
 interface RecentDocument {
@@ -18,7 +19,7 @@ interface RecentDocument {
   upload_date: string;
 }
 
-export function DashboardOverview({ user }: DashboardOverviewProps) {
+export function DashboardOverview({ user, onOpenUploadModal }: DashboardOverviewProps) {
   const navigate = useNavigate();
   const [recentDocuments, setRecentDocuments] = useState<RecentDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +91,7 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <Button onClick={() => navigate("/upload")} className="flex items-center gap-2">
+            <Button onClick={onOpenUploadModal} className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
               Analyze New Document
             </Button>
@@ -126,7 +127,7 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 Upload your first document to get started
               </p>
-              <Button onClick={() => navigate("/upload")}>
+              <Button onClick={onOpenUploadModal}>
                 Upload Document
               </Button>
             </div>
