@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import FeatureSection from "@/components/FeatureSection";
 import PrivacySection from "@/components/PrivacySection";
@@ -116,8 +117,10 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen">
-      {currentView === 'hero' && (
+    <div className="min-h-screen">
+      <Header />
+      <main>
+        {currentView === 'hero' && (
         <>
           <Hero onGetStarted={handleGetStarted} />
           <FeatureSection />
@@ -139,7 +142,8 @@ const Index = () => {
           onStartOver={handleStartOver}
         />
       )}
-    </main>
+      </main>
+    </div>
   );
 };
 
