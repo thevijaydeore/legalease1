@@ -1,4 +1,3 @@
-
 import { Home, FileText, User, Upload, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +32,9 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
   const { state, setOpen, isMobile } = useSidebar();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
-  const showExpanded = state === "expanded";
+  
+  // In mobile, always show expanded view. In desktop, follow the state
+  const showExpanded = isMobile || state === "expanded";
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -69,21 +70,17 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
               <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">L</span>
               </div>
-              <div className={`transition-all duration-300 overflow-hidden ${
-                showExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-              }`}>
+              {showExpanded && (
                 <h1 className="text-xl font-bold whitespace-nowrap">LegalEase</h1>
-              </div>
+              )}
             </div>
             <SidebarTrigger className="md:hidden" />
           </div>
 
         <SidebarGroup>
-          <div className={`transition-all duration-300 overflow-hidden ${
-            showExpanded ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
-          }`}>
+          {showExpanded && (
             <SidebarGroupLabel>Main</SidebarGroupLabel>
-          </div>
+          )}
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -94,11 +91,9 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
                     className="relative flex items-center justify-start gap-3 px-3 py-2"
                   >
                     <item.icon className="h-4 w-4 flex-shrink-0" />
-                    <span className={`transition-all duration-300 overflow-hidden ${
-                      showExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                    }`}>
+                    {showExpanded && (
                       <span className="whitespace-nowrap">{item.title}</span>
-                    </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -107,11 +102,9 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
         </SidebarGroup>
 
         <SidebarGroup>
-          <div className={`transition-all duration-300 overflow-hidden ${
-            showExpanded ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
-          }`}>
+          {showExpanded && (
             <SidebarGroupLabel>Actions</SidebarGroupLabel>
-          </div>
+          )}
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -120,11 +113,9 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
                   className="relative flex items-center justify-start gap-3 px-3 py-2"
                 >
                   <Upload className="h-4 w-4 flex-shrink-0" />
-                  <span className={`transition-all duration-300 overflow-hidden ${
-                    showExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                  }`}>
+                  {showExpanded && (
                     <span className="whitespace-nowrap">New Upload</span>
-                  </span>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -138,11 +129,9 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
             onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4 flex-shrink-0" />
-            <span className={`transition-all duration-300 overflow-hidden ${
-              showExpanded ? 'opacity-100 w-auto ml-2' : 'opacity-0 w-0'
-            }`}>
-              <span className="whitespace-nowrap">Sign Out</span>
-            </span>
+            {showExpanded && (
+              <span className="whitespace-nowrap ml-2">Sign Out</span>
+            )}
           </Button>
         </div>
       </SidebarContent>
