@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { Home, FileText, User, Upload, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,13 +30,10 @@ const menuItems = [
 ];
 
 export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }: DashboardSidebarProps) {
-  const { state } = useSidebar();
+  const { state, setOpen, isMobile } = useSidebar();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
-  const [isHovered, setIsHovered] = useState(false);
-
-  // On desktop, show expanded view on hover, otherwise show collapsed
-  const showExpanded = isHovered || !collapsed;
+  const showExpanded = state === "expanded";
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -58,15 +55,11 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
   return (
     <div 
       className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => { if (!isMobile) setOpen(true); }}
+      onMouseLeave={() => { if (!isMobile) setOpen(false); }}
     >
       <Sidebar 
-        className={`
-          border-r transition-all duration-300 ease-in-out
-          ${showExpanded ? 'w-64' : 'w-16'}
-          md:hover:w-64
-        `} 
+        className={"border-r"}
         collapsible="icon" 
         variant="inset"
       >
