@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface DocumentGridProps {
-  user: User;
+  user: any; // Accept both User and GuestUser
   onOpenUploadModal: () => void;
 }
 
@@ -53,6 +53,12 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
 
   const fetchDocuments = async () => {
     try {
+      // For guest users, return empty array since they don't have persistent documents
+      if (user.isGuest) {
+        setDocuments([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("documents")
         .select("*")

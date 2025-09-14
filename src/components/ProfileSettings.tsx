@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileSettingsProps {
-  user: User;
+  user: any; // Accept both User and GuestUser
 }
 
 interface Profile {
@@ -38,6 +38,25 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
 
   const fetchProfile = async () => {
     try {
+      // Handle guest users
+      if (user.isGuest) {
+        const guestProfile = {
+          id: user.id,
+          user_id: user.id,
+          full_name: user.user_metadata.full_name,
+          display_name: user.user_metadata.display_name,
+          profile_picture_url: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setProfile(guestProfile);
+        setFormData({
+          full_name: guestProfile.full_name || "",
+          display_name: guestProfile.display_name || "",
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -100,6 +119,16 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
   };
 
   const handleSaveProfile = async () => {
+    // Don't allow saving for guest users
+    if (user.isGuest) {
+      toast({
+        title: "Guest Account",
+        description: "Profile changes are not saved for guest users. Sign up to keep your changes.",
+        variant: "default",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const { data, error } = await supabase

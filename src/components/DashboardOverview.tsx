@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { QuickStats } from "@/components/QuickStats";
 
 interface DashboardOverviewProps {
-  user: User;
+  user: any; // Accept both User and GuestUser
   onOpenUploadModal: () => void;
 }
 
@@ -30,6 +30,12 @@ export function DashboardOverview({ user, onOpenUploadModal }: DashboardOverview
 
   const fetchRecentDocuments = async () => {
     try {
+      // For guest users, return empty array since they don't have persistent documents
+      if (user.isGuest) {
+        setRecentDocuments([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("documents")
         .select("id, title, analysis_status, upload_date")

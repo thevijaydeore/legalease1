@@ -29,6 +29,17 @@ export function QuickStats({ userId }: QuickStatsProps) {
 
   const fetchStats = async () => {
     try {
+      // For guest users, return zero stats
+      if (userId === '00000000-0000-0000-0000-000000000001') {
+        setStats({
+          totalDocuments: 0,
+          completedAnalyses: 0,
+          pendingAnalyses: 0,
+          recentUploads: 0,
+        });
+        return;
+      }
+
       // Get total documents
       const { data: totalDocs, error: totalError } = await supabase
         .from("documents")

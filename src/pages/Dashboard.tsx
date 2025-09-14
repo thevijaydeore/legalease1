@@ -8,16 +8,26 @@ import { DashboardOverview } from "@/components/DashboardOverview";
 import { DocumentGrid } from "@/components/DocumentGrid";
 import { ProfileSettings } from "@/components/ProfileSettings";
 import { DocumentUploadModal } from "@/components/DocumentUploadModal";
+import { guestAuth, GuestUser } from "@/lib/guestAuth";
 
 const Dashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | GuestUser | null>(null);
+  const [session, setSession] = useState<Session | any | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState("overview");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener
+    // Check for guest session first
+    const guestSession = guestAuth.getGuestSession();
+    if (guestSession) {
+      setSession(guestSession.session);
+      setUser(guestSession.user);
+      setLoading(false);
+      return;
+    }
+
+    // Set up auth state listener for regular users
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -44,7 +54,7 @@ const Dashboard = () => {
     );
   }
 
-  // Redirect to auth if not logged in
+  // Redirect to auth if not logged in (neither regular user nor guest)
   if (!session || !user) {
     return <Navigate to="/auth" replace />;
   }

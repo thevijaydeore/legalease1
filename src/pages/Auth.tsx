@@ -9,16 +9,26 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import Header from "@/components/Header";
+import { guestAuth, GuestUser } from "@/lib/guestAuth";
 
 const Auth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | GuestUser | null>(null);
+  const [session, setSession] = useState<Session | any | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Check for guest session first
+    const guestSession = guestAuth.getGuestSession();
+    if (guestSession) {
+      setSession(guestSession.session);
+      setUser(guestSession.user);
+      navigate('/dashboard');
+      return;
+    }
+
+    // Set up auth state listener for regular users
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -31,7 +41,7 @@ const Auth = () => {
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -44,6 +54,30 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleContinueAsGuest = () => {
+    setLoading(true);
+    try {
+      const guestSession = guestAuth.signInAsGuest();
+      setSession(guestSession.session);
+      setUser(guestSession.user);
+      
+      toast({
+        title: "Welcome, Guest!",
+        description: "You're now using LegalEase as a guest user.",
+      });
+      
+      navigate('/dashboard');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create guest session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -184,7 +218,7 @@ const Auth = () => {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate('/upload')}
+                  onClick={handleContinueAsGuest}
                   disabled={loading}
                 >
                   Continue as Guest

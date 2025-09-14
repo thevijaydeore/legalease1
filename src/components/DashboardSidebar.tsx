@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Home, FileText, User, Upload, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { guestAuth } from "@/lib/guestAuth";
 
 interface DashboardSidebarProps {
   activeView: string;
@@ -37,15 +39,32 @@ export function DashboardSidebar({ activeView, onViewChange, onOpenUploadModal }
   const showExpanded = isMobile || state === "expanded";
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      // Check if this is a guest session
+      const guestSession = guestAuth.getGuestSession();
+      if (guestSession) {
+        guestAuth.signOut();
+        navigate("/");
+        return;
+      }
+
+      // Handle regular user sign out
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to sign out. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
-    } else {
-      navigate("/");
     }
   };
 
