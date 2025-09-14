@@ -54,7 +54,7 @@ const Dashboard = () => {
       case "overview":
         return <DashboardOverview user={user} onOpenUploadModal={() => setUploadModalOpen(true)} />;
       case "documents":
-        return <DocumentGrid user={user} />;
+        return <DocumentGrid user={user} onOpenUploadModal={() => setUploadModalOpen(true)} />;
       case "profile":
         return <ProfileSettings user={user} />;
       default:

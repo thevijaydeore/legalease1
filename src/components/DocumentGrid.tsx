@@ -22,6 +22,7 @@ import {
 
 interface DocumentGridProps {
   user: User;
+  onOpenUploadModal: () => void;
 }
 
 interface Document {
@@ -35,7 +36,7 @@ interface Document {
   analysis_results: any;
 }
 
-export function DocumentGrid({ user }: DocumentGridProps) {
+export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -217,7 +218,7 @@ export function DocumentGrid({ user }: DocumentGridProps) {
                 : "Try adjusting your search or filter criteria"
               }
             </p>
-            <Button onClick={() => window.location.href = '/upload'}>
+            <Button onClick={onOpenUploadModal}>
               Upload Document
             </Button>
           </CardContent>
