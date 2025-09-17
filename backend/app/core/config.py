@@ -1,4 +1,5 @@
-from pydantic import BaseSettings, Field
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -9,10 +10,11 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = Field(None, env="SUPABASE_SERVICE_ROLE_KEY")
     database_url: str = Field(..., env="DATABASE_URL")  # postgresql://user:pass@host:port/dbname
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False
+    }
 
 
 settings = Settings()
