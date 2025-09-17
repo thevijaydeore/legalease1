@@ -3,7 +3,7 @@
 This defines a minimal upload route. In the next steps, we'll wire it to services.ingest
 for chunking, embedding, and persisting to Supabase/pgvector.
 """
-from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Request
 from typing import Optional, List
 import uuid
 
@@ -17,6 +17,7 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 
 @router.post("/upload", response_model=UploadResponse, status_code=status.HTTP_200_OK)
 async def upload_document(
+    request: Request,
     file: UploadFile = File(..., description="PDF, DOCX or TXT file"),
     user_id: Optional[str] = None,
 ):
@@ -41,6 +42,17 @@ async def upload_document(
 
     # Upload to Supabase Storage
     sb = get_supabase()
+
+    # If a user JWT is provided, use it for PostgREST to satisfy RLS
+    try:
+        auth_header = request.headers.get("authorization")
+        if auth_header and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+            if token:
+                sb.postgrest.auth(token)
+    except Exception:
+        pass
+
     bucket = "documents"
     effective_user_id = user_id or GUEST_USER_ID
     path = f"{effective_user_id}/{uuid.uuid4().hex}-{file.filename}"

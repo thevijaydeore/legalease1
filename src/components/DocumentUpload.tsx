@@ -39,8 +39,16 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
       form.append('file', file);
       if (userId) form.append('user_id', userId);
 
+      // Include the Supabase session token so backend can satisfy RLS
+      const { data: sessionData } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (sessionData?.session?.access_token) {
+        headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+      }
+
       const res = await fetch(`${API_BASE}/documents/upload`, {
         method: 'POST',
+        headers,
         body: form,
       });
 
