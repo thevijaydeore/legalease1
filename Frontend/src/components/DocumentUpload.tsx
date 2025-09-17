@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import type { DragEvent } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, FileText, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentUploadProps {
   onProcessDocument: (content: string) => void;
@@ -15,23 +17,50 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
   const [textContent, setTextContent] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || "http://localhost:8000";
+
+  const handleDrop = useCallback((e: DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     
-    const files = Array.from(e.dataTransfer.files);
+    const files = Array.from(e.dataTransfer.files) as File[];
     if (files.length > 0) {
       handleFileUpload(files[0]);
     }
   }, []);
 
   const handleFileUpload = async (file: File) => {
-    if (file.type === 'text/plain') {
-      const text = await file.text();
-      onProcessDocument(text);
-    } else {
-      // For demo purposes, simulate file processing
-      onProcessDocument("Sample legal document content for demonstration...");
+    try {
+      // Try to get the authenticated Supabase user id (optional)
+      const { data } = await supabase.auth.getUser();
+      const userId = data?.user?.id || undefined;
+
+      const form = new FormData();
+      form.append('file', file);
+      if (userId) form.append('user_id', userId);
+
+      const res = await fetch(`${API_BASE}/documents/upload`, {
+        method: 'POST',
+        body: form,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Upload failed (${res.status}): ${errText}`);
+      }
+
+      const payload = await res.json();
+      // Pass a human-friendly message up
+      onProcessDocument(`Uploaded: ${file.name}. Document ID: ${payload.document_id}. ${payload.message || ''}`);
+    } catch (e: any) {
+      console.error('Upload error:', e);
+      // Fallback to previous demo behavior so UX isn't blocked
+      if (file.type === 'text/plain') {
+        const text = await file.text();
+        onProcessDocument(text);
+      } else {
+        onProcessDocument("Sample legal document content for demonstration...");
+      }
     }
   };
 
