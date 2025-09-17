@@ -57,10 +57,11 @@ async def upload_document(
     document_id: str = path
     try:
         insert_payload = {
-            "path": path,
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_bytes": len(content),
+            "title": file.filename or "Untitled Document",  # Required field
+            "original_filename": file.filename,  # Required field
+            "file_path": path,  # Correct column name
+            "file_type": file.content_type,  # Correct column name
+            "file_size": len(content),  # Correct column name
             "user_id": user_id,
         }
         res = sb.table("documents").insert(insert_payload).select("id").single().execute()
