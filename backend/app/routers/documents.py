@@ -10,6 +10,8 @@ import uuid
 from ..models.document import UploadResponse
 from ..db.supabase_client import get_supabase
 
+GUEST_USER_ID = "00000000-0000-0000-0000-000000000001"
+
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
 
@@ -40,7 +42,8 @@ async def upload_document(
     # Upload to Supabase Storage
     sb = get_supabase()
     bucket = "documents"
-    path = f"{user_id or 'anonymous'}/{uuid.uuid4().hex}-{file.filename}"
+    effective_user_id = user_id or GUEST_USER_ID
+    path = f"{effective_user_id}/{uuid.uuid4().hex}-{file.filename}"
     try:
         sb.storage.from_(bucket).upload(
             path=path,
@@ -62,7 +65,7 @@ async def upload_document(
             "file_path": path,  # Correct column name
             "file_type": file.content_type,  # Correct column name
             "file_size": len(content),  # Correct column name
-            "user_id": user_id,
+            "user_id": effective_user_id,
         }
         res = sb.table("documents").insert(insert_payload).select("id").single().execute()
         if getattr(res, "data", None) and isinstance(res.data, dict) and res.data.get("id"):
