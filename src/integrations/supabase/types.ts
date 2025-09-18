@@ -46,17 +46,64 @@ export type Database = {
           },
         ]
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          created_at: string | null
+          document_id: string | null
+          id: string
+          pinecone_id: string | null
+          token_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          pinecone_id?: string | null
+          token_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          pinecone_id?: string | null
+          token_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           analysis_results: Json | null
           analysis_status: string
+          chunks_count: number | null
           created_at: string
+          embedding_status: string | null
           file_path: string | null
           file_size: number | null
           file_type: string | null
           file_url: string | null
           id: string
           original_filename: string
+          processing_status: string | null
           title: string
           updated_at: string
           upload_date: string
@@ -65,13 +112,16 @@ export type Database = {
         Insert: {
           analysis_results?: Json | null
           analysis_status?: string
+          chunks_count?: number | null
           created_at?: string
+          embedding_status?: string | null
           file_path?: string | null
           file_size?: number | null
           file_type?: string | null
           file_url?: string | null
           id?: string
           original_filename: string
+          processing_status?: string | null
           title: string
           updated_at?: string
           upload_date?: string
@@ -80,13 +130,16 @@ export type Database = {
         Update: {
           analysis_results?: Json | null
           analysis_status?: string
+          chunks_count?: number | null
           created_at?: string
+          embedding_status?: string | null
           file_path?: string | null
           file_size?: number | null
           file_type?: string | null
           file_url?: string | null
           id?: string
           original_filename?: string
+          processing_status?: string | null
           title?: string
           updated_at?: string
           upload_date?: string

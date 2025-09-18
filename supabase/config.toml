@@ -1,1 +1,80 @@
 project_id = "zxbwnbzaydgldkkdckvj"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+ip_version = "ipv4"
+port = 54323
+max_connections = 100
+max_channels_per_client = 100
+max_joins_per_second = 100
+max_events_per_second = 100
+postgres_changes_enabled = true
+private_key = "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRRE5rd3hmcmNOZ3V6cUgKL21HMWY1RU44TTUxV09Vdk5VdlpGTXFYQ0lJV3FzQXMvblE0TGhKUnF3M1pxV1A2eGJsRzVzMWVQSThDK21legpjMkVyV3VyZmJTeGwydmp4em5mc0I4WUJzR01Fb3RJdHdyMDBMb3F0anBva0FNOHcrSDVYVVNEMHBVZGdJdjNGCmhGT3E5dE5mbW5FTjUzVnRJNERwVlJCRnVucnJnNGhyTExCYzMyRG5qb0luTUNuNWFNSGVlN0U1Y1lybU1ONjIKdHZ2dzVJTjFIRndQSTRuanFGZnlCYVEyaGpld1NDQnRGb05xN08yVmNPU3V1aWwyQ0dYT29iUk9uR1Vxc2gwNwp3UWtoK0hTWXpUcER6d2k4K0lKQUNXVDkrZFBOZ085OXl1ZU5rb3VBYUd0YzgzN0hxT1RKaTFYMm5IeDJSMXBZCkduM3ZqUHFyQWdNQkFBRUNnZ0VBTVBObWRIUWdVOGoxbGhOL29uME4vYWVOalZOU01nUGl6c1ROTGNQc1lPTmMKMU1jL3VNd0dTaDlXSDZreDFMWm9VNG9PVzl0TGttZW9lTXc4UDN4aHJJRVNJRHBSMjJWL3VnUE9GdEIrMitkYgp5dW9rV1dJeDlEbTcvY3RDQTY1WlVIQ0tUT3R2U21LQTU4TVdBbWJwbXJDdlJnZ0dWQkFBTGc0T3dVSHprQjNqCnFFRjJlS0lHL3JEN2VzZld4NlBYTGV0M29QdlErR1k0Y1JrL2t6YnZKTURVb2hSVk1NOHU0Qm5MNU1DZUt6bXEKc3JVT0tjK1E2d3dsZFFkajFkZnVzWG5FbVlKR2xJV0NzMXRGTWp1RWQrdDR0S1ZuWCtZZHAzVXZxZytUdXpmNgo0M0tGQTh3aGxiQ2J6THp5cy9Oei8xanVSK2I2THlJWFBnZ3QxUUtCZ1FEdXY3Sy9IMGJnWU1vV0VBbXBjZnI1CjR1dHBGVGNCUy9aVDBKTGg5V3lhU2FobmpiWTJyVE8xM0JUNy9BSCtiSDZIRmI5R0ZidHYzYmVxOXEwNGRPRGQKNXEwZGJJcjNhSnJVSURUOHplMXBDdTNSOExGeVloV0VQR2FGMlA3cjFQOUVoZFJkbWJlU2JPRVp5WjJ1U25sQQpaRGJKZTdYaFcya0ZudGNwNFBCdjBRS0JnUUR2RW00K081WDIwZ3h1bmZCRUdFRWROcStIOGFOLzVWdGVucE5aCmZ1NWdkQjZUa01raHBvRnY0aUJ3SDNmVTYxMEYwaU9QTURkM3NVM2lLUW0xWWFsOUNub3prNGgvT2VFSHVuWDEKL1pHenV1VGhEYWJvcDNtVWNEUW9MK1BCOVkyTTk1ckt5azJwT05mZGhhMkJSUE5nRW1vT2dINHBZZHdob1BqZAppckdHUndLQmdDemozUXlGVGp3N2tYYmMwdEt4cHFNQVVrWGJaSkVaOEIwT0JPZTFkcDA3aEdvM0pqRWJHNkgwCnYvcGxqN3F2YU9PUE9YeDY1NkVQQkNFSUl2Yllrb3BqSmNUUUFqOU9tR2o4YVN4Rk5mRFNNM0M2M1AyaThHMnUKMXRBTVBCSzFqOGdCcnh6YXBJUGdzYTRTcyt4QVJleU91S2JYUUp4N1ZKVTlhRUxySEQ0MUJBb0dBRTdXZ1g2QQpCZEsrZGRzTXdPRGNxRU1jaUcyWVJnL0dEcVNSSU1IUXBrS1UyTUVaY2JZT3VoMUNmbEJsOEd0NzAvZms2R1BFCjNzU29uVkNVSWZlRkZ4T2x1RjhOb1pMSWN6b3M4bVFneDlVN1BaMVFYT3dZZmFrRHBMTFhMZXVlaHdVUXNPbFMKYm9YOENDTndTREUzMjR1YldGTG5wL1ExeE5zWHhQNHp3UDBDWkJFQ2dZRUF2ajB2WjNLc0RkbktWQWZZOGJKegpoWGgvcGpGNlpCRzZOcWg1SzBXN2pNa2xJTkE2TytGUGJrT0tKdk5SREZ4L0JwNXdYSWRHbWFTREF3NGFxdjJGCk5IL2hGY21JS0xnUXFoRElOL3RIYkVwNlZCTElJRzYxcFpCblF3YnVIRmZpdVNZTlViZzJ2QXN5SjJudGxOKzEKT3duclFjcEdKRUNBSmdFT3dJdVZNOUE9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K"
+ip_version = "ipv4"
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+image_transformation = { enabled = true }
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://zxbwnbzaydgldkkdckvj.supabase.co"]
+jwt_expiry = 3600
+enable_signup = true
+email_double_confirm_changes = true
+enable_manual_linking = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+template = "Your code is {{ .Code }}"
+
+[edge_runtime]
+enabled = true
+port = 54321
+
+[functions.process-document]
+verify_jwt = false
+
+[functions.generate-embeddings]
+verify_jwt = false
+
+[functions.chat-with-documents]
+verify_jwt = false
