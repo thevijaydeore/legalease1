@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, FileText, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentUploadProps {
   onProcessDocument: (content: string) => void;
@@ -16,8 +17,7 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
   const [uploadMethod, setUploadMethod] = useState<'upload' | 'paste'>('upload');
   const [textContent, setTextContent] = useState('');
   const [dragOver, setDragOver] = useState(false);
-
-  const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || "http://localhost:8000";
+  const { toast } = useToast();
 
   const handleDrop = useCallback((e: DragEvent) => {
     e.preventDefault();
@@ -31,38 +31,71 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
 
   const handleFileUpload = async (file: File) => {
     try {
-      // Try to get the authenticated Supabase user id (optional)
-      const { data } = await supabase.auth.getUser();
-      const userId = data?.user?.id || undefined;
+      // Get the authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || '00000000-0000-0000-0000-000000000001'; // Use guest user ID if not authenticated
 
-      const form = new FormData();
-      form.append('file', file);
-      if (userId) form.append('user_id', userId);
+      // Generate unique file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
-      // Include the Supabase session token so backend can satisfy RLS
-      const { data: sessionData } = await supabase.auth.getSession();
-      const headers: Record<string, string> = {};
-      if (sessionData?.session?.access_token) {
-        headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
-      }
-
-      const res = await fetch(`${API_BASE}/documents/upload`, {
-        method: 'POST',
-        headers,
-        body: form,
+      toast({
+        title: "Uploading...",
+        description: "Your document is being uploaded to secure storage.",
       });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`Upload failed (${res.status}): ${errText}`);
+      // Upload file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
       }
 
-      const payload = await res.json();
-      // Pass a human-friendly message up
-      onProcessDocument(`Uploaded: ${file.name}. Document ID: ${payload.document_id}. ${payload.message || ''}`);
-    } catch (e: any) {
-      console.error('Upload error:', e);
-      // Fallback to previous demo behavior so UX isn't blocked
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // Insert document record into database
+      const { data: documentData, error: insertError } = await supabase
+        .from('documents')
+        .insert({
+          user_id: userId,
+          title: file.name,
+          original_filename: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          file_type: file.type || 'application/octet-stream',
+          analysis_status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      toast({
+        title: "Upload Successful!",
+        description: `${file.name} has been uploaded and saved to your documents.`,
+      });
+
+      // Pass success message to parent component
+      onProcessDocument(`Uploaded: ${file.name}. Document ID: ${documentData.id}. File stored securely in your account.`);
+      
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      
+      toast({
+        title: "Upload Failed",
+        description: error.message || "There was an error uploading your document.",
+        variant: "destructive"
+      });
+
+      // Fallback behavior for demo purposes
       if (file.type === 'text/plain') {
         const text = await file.text();
         onProcessDocument(text);
