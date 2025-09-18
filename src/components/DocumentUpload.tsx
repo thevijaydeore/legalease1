@@ -31,14 +31,30 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
 
   const handleFileUpload = async (file: File) => {
     try {
+      console.log('Starting file upload...', file.name);
+      
       // Get the authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('User check:', user, userError);
+      
+      if (!user) {
+        // For guest users, try to create a guest session
+        const { data: guestData, error: guestError } = await supabase.rpc('create_guest_session');
+        if (guestError) {
+          console.error('Guest session creation failed:', guestError);
+          throw new Error('Authentication required. Please sign up or sign in to upload documents.');
+        }
+        console.log('Guest session created:', guestData);
+      }
+      
       const userId = user?.id || '00000000-0000-0000-0000-000000000001'; // Use guest user ID if not authenticated
+      console.log('Using user ID:', userId);
 
       // Generate unique file path
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
+      console.log('File path:', filePath);
 
       toast({
         title: "Uploading...",
@@ -46,34 +62,38 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
       });
 
       // Upload file to Supabase Storage
+      console.log('Uploading to storage...');
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 
+      console.log('Storage upload result:', uploadData, uploadError);
+      
       if (uploadError) {
         throw uploadError;
       }
 
-      // Get the public URL for the uploaded file
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
       // Insert document record into database
+      console.log('Inserting document record...');
+      const documentRecord = {
+        user_id: userId,
+        title: file.name,
+        original_filename: file.name,
+        file_path: filePath,
+        file_size: file.size,
+        file_type: file.type || 'application/octet-stream',
+        analysis_status: 'pending'
+      };
+      console.log('Document record:', documentRecord);
+      
       const { data: documentData, error: insertError } = await supabase
         .from('documents')
-        .insert({
-          user_id: userId,
-          title: file.name,
-          original_filename: file.name,
-          file_path: filePath,
-          file_size: file.size,
-          file_type: file.type || 'application/octet-stream',
-          analysis_status: 'pending'
-        })
+        .insert(documentRecord)
         .select()
         .single();
 
+      console.log('Database insert result:', documentData, insertError);
+      
       if (insertError) {
         throw insertError;
       }
