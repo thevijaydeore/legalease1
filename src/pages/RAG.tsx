@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Upload, MessageSquare, FileText, Zap } from 'lucide-react';
+import { DocumentSummary } from '@/components/DocumentSummary';
 
 const RAG = () => {
   const navigate = useNavigate();
@@ -120,46 +121,19 @@ const RAG = () => {
           </TabsContent>
 
           <TabsContent value="chat" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3">
                 <ChatInterface userId={getUserId()} />
               </div>
               <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">How to use RAG</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 text-primary rounded-full p-1 mt-0.5">
-                        <span className="text-xs font-bold px-1">1</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Upload Documents</p>
-                        <p className="text-xs text-muted-foreground">Start by uploading your documents</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 text-primary rounded-full p-1 mt-0.5">
-                        <span className="text-xs font-bold px-1">2</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Process with AI</p>
-                        <p className="text-xs text-muted-foreground">Let AI chunk and embed your content</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="bg-primary/10 text-primary rounded-full p-1 mt-0.5">
-                        <span className="text-xs font-bold px-1">3</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Chat & Ask</p>
-                        <p className="text-xs text-muted-foreground">Ask questions about your documents</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
+                <DocumentSummary 
+                  userId={getUserId()} 
+                  onSelectDocument={(docId) => {
+                    // Future: Set selected document for context
+                    console.log('Selected document:', docId);
+                  }}
+                />
+                
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Example Questions</CardTitle>

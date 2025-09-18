@@ -98,6 +98,17 @@ const Upload = () => {
   };
 
   const handleProcessDocument = async (content: string) => {
+    // For uploaded documents, redirect to RAG page for processing
+    if (content.includes('Document ID:')) {
+      toast({
+        title: "Document Uploaded!",
+        description: "Redirecting to RAG page for processing...",
+      });
+      navigate('/rag');
+      return;
+    }
+
+    // For pasted text, use legacy processing
     setIsProcessing(true);
     
     try {

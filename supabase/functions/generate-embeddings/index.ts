@@ -96,9 +96,10 @@ serve(async (req) => {
       });
     }
 
-    // Upsert vectors to Pinecone (you'll need your Pinecone index URL)
-    // For now, we'll assume a Pinecone serverless index
-    const pineconeIndexUrl = 'https://your-index-name-project-id.svc.gcp-starter.pinecone.io'; // Replace with your actual index URL
+    // Get Pinecone configuration from environment
+    const pineconeIndexUrl = Deno.env.get('PINECONE_INDEX_URL') || 'https://your-index-name-project-id.svc.gcp-starter.pinecone.io';
+    
+    console.log('Using Pinecone URL:', pineconeIndexUrl);
     
     const pineconeResponse = await fetch(`${pineconeIndexUrl}/vectors/upsert`, {
       method: 'POST',
