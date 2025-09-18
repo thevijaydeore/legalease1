@@ -30,31 +30,35 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
   }, []);
 
   const handleFileUpload = async (file: File) => {
+    console.log('=== STARTING FILE UPLOAD DEBUG ===');
+    console.log('File details:', { name: file.name, size: file.size, type: file.type });
+    
     try {
-      console.log('Starting file upload...', file.name);
+      console.log('Step 1: Starting file upload...', file.name);
       
       // Get the authenticated user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      console.log('User check:', user, userError);
+      console.log('Step 2: User check result:', { user: user?.id, error: userError });
       
       if (!user) {
         // For guest users, try to create a guest session
+        console.log('Step 3: Creating guest session...');
         const { data: guestData, error: guestError } = await supabase.rpc('create_guest_session');
+        console.log('Step 3 result:', { guestData, guestError });
         if (guestError) {
           console.error('Guest session creation failed:', guestError);
           throw new Error('Authentication required. Please sign up or sign in to upload documents.');
         }
-        console.log('Guest session created:', guestData);
       }
       
       const userId = user?.id || '00000000-0000-0000-0000-000000000001'; // Use guest user ID if not authenticated
-      console.log('Using user ID:', userId);
+      console.log('Step 4: Using user ID:', userId);
 
       // Generate unique file path
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
-      console.log('File path:', filePath);
+      console.log('Step 5: Generated file path:', filePath);
 
       toast({
         title: "Uploading...",
@@ -62,19 +66,20 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
       });
 
       // Upload file to Supabase Storage
-      console.log('Uploading to storage...');
+      console.log('Step 6: Uploading to storage...');
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 
-      console.log('Storage upload result:', uploadData, uploadError);
+      console.log('Step 6 result:', { uploadData, uploadError });
       
       if (uploadError) {
+        console.error('Storage upload failed:', uploadError);
         throw uploadError;
       }
 
       // Insert document record into database
-      console.log('Inserting document record...');
+      console.log('Step 7: Inserting document record...');
       const documentRecord = {
         user_id: userId,
         title: file.name,
@@ -84,7 +89,7 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
         file_type: file.type || 'application/octet-stream',
         analysis_status: 'pending'
       };
-      console.log('Document record:', documentRecord);
+      console.log('Step 7: Document record to insert:', documentRecord);
       
       const { data: documentData, error: insertError } = await supabase
         .from('documents')
@@ -92,36 +97,41 @@ const DocumentUpload = ({ onProcessDocument, isProcessing, onBackToHome }: Docum
         .select()
         .single();
 
-      console.log('Database insert result:', documentData, insertError);
+      console.log('Step 7 result:', { documentData, insertError });
       
       if (insertError) {
+        console.error('Database insert failed:', insertError);
         throw insertError;
       }
 
+      console.log('=== UPLOAD SUCCESS ===');
       toast({
         title: "Upload Successful!",
         description: `${file.name} has been uploaded and saved to your documents.`,
       });
 
       // Pass success message to parent component
-      onProcessDocument(`Uploaded: ${file.name}. Document ID: ${documentData.id}. File stored securely in your account.`);
+      const successMessage = `Uploaded: ${file.name}. Document ID: ${documentData.id}. File stored securely in your account.`;
+      console.log('Step 8: Calling onProcessDocument with:', successMessage);
+      onProcessDocument(successMessage);
       
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('=== UPLOAD ERROR ===', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       
       toast({
         title: "Upload Failed",
-        description: error.message || "There was an error uploading your document.",
+        description: error.message || "There was an error uploading your document. Please try again.",
         variant: "destructive"
       });
 
-      // Fallback behavior for demo purposes
-      if (file.type === 'text/plain') {
-        const text = await file.text();
-        onProcessDocument(text);
-      } else {
-        onProcessDocument("Sample legal document content for demonstration...");
-      }
+      // Don't fallback to demo processing - just show the error
+      // This prevents triggering the static analysis page on upload failures
     }
   };
 
