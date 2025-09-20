@@ -21,20 +21,45 @@ interface Document {
 interface DocumentProcessorProps {
   userId: string;
   onDocumentReady?: (documentId: string) => void;
+  autoProcessDocumentId?: string;
 }
 
 export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({ 
   userId, 
-  onDocumentReady 
+  onDocumentReady,
+  autoProcessDocumentId
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingDocs, setProcessingDocs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const [autoTriggeredFor, setAutoTriggeredFor] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDocuments();
   }, [userId]);
+
+  // Auto-process the target document when available
+  useEffect(() => {
+    if (!autoProcessDocumentId || autoTriggeredFor === autoProcessDocumentId) return;
+    const target = documents.find(d => d.id === autoProcessDocumentId);
+    if (!target) return;
+
+    // If already processed, notify and skip
+    if (target.processing_status === 'ready' && target.embedding_status === 'completed') {
+      onDocumentReady?.(target.id);
+      setAutoTriggeredFor(autoProcessDocumentId);
+      toast({ title: 'Report Ready', description: 'Document is already processed and ready for chat.' });
+      return;
+    }
+
+    // If can process, start processing automatically
+    if (canProcess(target.processing_status, target.embedding_status)) {
+      setAutoTriggeredFor(autoProcessDocumentId);
+      toast({ title: 'Starting Processing', description: 'Automatically processing your uploaded document...' });
+      processDocument(target.id);
+    }
+  }, [documents, autoProcessDocumentId, autoTriggeredFor]);
 
   const fetchDocuments = async () => {
     try {

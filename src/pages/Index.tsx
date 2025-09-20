@@ -115,8 +115,20 @@ const Index = () => {
   };
 
   const handleProcessDocument = async (content: string) => {
+    // If this came from an actual file upload, redirect to RAG with docId for auto processing
+    if (content.includes('Document ID:')) {
+      const match = content.match(/Document ID:\s*([a-f0-9\-]+)/i);
+      const docId = match?.[1];
+      toast({
+        title: "Document Uploaded!",
+        description: "Starting AI processing...",
+      });
+      navigate(docId ? `/rag?docId=${docId}` : '/rag');
+      return;
+    }
+
+    // Legacy flow for pasted text only
     setIsProcessing(true);
-    
     try {
       toast({
         title: "Processing Document",

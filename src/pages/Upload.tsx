@@ -102,14 +102,16 @@ const Upload = () => {
     console.log('Received content:', content);
     console.log('Contains Document ID?', content.includes('Document ID:'));
     
-    // For uploaded documents, redirect to RAG page for processing
+    // For uploaded documents, redirect to RAG processing with document ID
     if (content.includes('Document ID:')) {
-      console.log('✅ Redirecting to RAG page...');
+      console.log('✅ Redirecting to RAG for auto processing...');
+      const match = content.match(/Document ID:\s*([a-f0-9\-]+)/i);
+      const docId = match?.[1];
       toast({
         title: "Document Uploaded!",
-        description: "Redirecting to RAG page for processing...",
+        description: "Starting AI processing...",
       });
-      navigate('/rag');
+      navigate(docId ? `/rag?docId=${docId}` : '/rag');
       return;
     }
 

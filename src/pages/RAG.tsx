@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+
 import Header from '@/components/Header';
 import { ChatInterface } from '@/components/ChatInterface';
 import { DocumentProcessor } from '@/components/DocumentProcessor';
@@ -16,6 +17,8 @@ const RAG = () => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState('chat');
+  const location = useLocation();
+  const [autoDocId, setAutoDocId] = useState<string | null>(null);
 
   useEffect(() => {
     // Get initial session
@@ -34,6 +37,16 @@ const RAG = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Parse docId from URL and switch to Process tab if present
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const docId = params.get('docId');
+    if (docId) {
+      setAutoDocId(docId);
+      setActiveTab('process');
+    }
+  }, [location.search]);
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -113,6 +126,7 @@ const RAG = () => {
             <DocumentProcessor 
               userId={getUserId()} 
               onDocumentReady={handleDocumentReady}
+              autoProcessDocumentId={autoDocId || undefined}
             />
           </TabsContent>
 

@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DocumentUpload from "@/components/DocumentUpload";
 import ResultsDisplay from "@/components/ResultsDisplay";
@@ -11,8 +14,22 @@ interface DocumentUploadModalProps {
 export function DocumentUploadModal({ open, onOpenChange }: DocumentUploadModalProps) {
   const [processedContent, setProcessedContent] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleProcessDocument = async (content: string) => {
+    // If upload message contains a real Document ID, redirect to dashboard chat
+    if (content.includes('Document ID:')) {
+      toast({
+        title: "Document Uploaded!",
+        description: "Taking you to your dashboard to chat with the document...",
+      });
+      onOpenChange(false);
+      navigate('/dashboard');
+      return;
+    }
+
+    // Legacy: for pasted text, keep showing static analysis in the modal
     setIsProcessing(true);
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 2000));
