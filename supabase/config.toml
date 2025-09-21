@@ -78,3 +78,9 @@ verify_jwt = false
 
 [functions.chat-with-documents]
 verify_jwt = false
+
+[functions.generate-document-summary]
+verify_jwt = false
+
+[functions.cleanup-and-reprocess]
+verify_jwt = false

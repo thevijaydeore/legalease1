@@ -1,10 +1,49 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+// Import PDF.js for proper PDF text extraction
+import * as pdfjs from "https://esm.sh/pdfjs-dist@3.11.174";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Function to extract text from PDF using PDF.js
+async function extractPdfText(pdfBuffer: Blob): Promise<string> {
+  try {
+    // Convert Blob to ArrayBuffer
+    const arrayBuffer = await pdfBuffer.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Load the PDF document
+    const loadingTask = pdfjs.getDocument({ data: uint8Array });
+    const pdf = await loadingTask.promise;
+    
+    let fullText = '';
+    
+    // Extract text from each page
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      
+      // Combine all text items from the page
+      const pageText = textContent.items
+        .map((item: any) => item.str || '')
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      if (pageText) {
+        fullText += pageText + '\n\n';
+      }
+    }
+    
+    return fullText.trim();
+  } catch (error) {
+    console.error('PDF text extraction error:', error);
+    throw new Error(`Failed to extract text from PDF: ${error.message}`);
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -54,19 +93,24 @@ serve(async (req) => {
       if (document.file_type?.includes('text') || document.file_type?.includes('plain')) {
         textContent = await fileData.text();
       } else if (document.file_type?.includes('pdf')) {
-        // For PDF processing, we'll need a more sophisticated approach
-        // For now, just handle text files and add PDF processing later
-        textContent = await fileData.text();
+        console.log('Extracting text from PDF...');
+        textContent = await extractPdfText(fileData);
       } else {
-        // Try to read as text anyway
+        // For other file types, try to read as text
         textContent = await fileData.text();
       }
 
       // Sanitize text content to remove null bytes and other problematic characters
       textContent = sanitizeText(textContent);
       
+      console.log(`Extracted text length: ${textContent.length} characters`);
+      
       if (!textContent || textContent.trim().length === 0) {
         throw new Error('No readable text content found in document');
+      }
+      
+      if (textContent.length < 50) {
+        throw new Error('Document content is too short for meaningful analysis');
       }
     } catch (textError) {
       console.error('Error extracting text:', textError);

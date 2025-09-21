@@ -102,6 +102,50 @@ const Workspace = () => {
     
     setIsRegenerating(true);
     try {
+      // First, clean up and reprocess the document if it has corrupted chunks
+      console.log('Cleaning up document and reprocessing...');
+      const cleanupResponse = await supabase.functions.invoke('cleanup-and-reprocess', {
+        body: {
+          documentId: documentId,
+          userId: getUserId()
+        }
+      });
+
+      if (cleanupResponse.error) {
+        console.error('Cleanup error:', cleanupResponse.error);
+        throw new Error('Failed to clean up document');
+      }
+
+      // Wait a moment for processing to complete
+      console.log('Waiting for document processing...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Check if processing completed
+      let attempts = 0;
+      let processingCompleted = false;
+      
+      while (attempts < 10 && !processingCompleted) {
+        const { data: docCheck } = await supabase
+          .from('documents')
+          .select('processing_status, embedding_status')
+          .eq('id', documentId)
+          .single();
+        
+        if (docCheck?.processing_status === 'chunked' && docCheck?.embedding_status === 'completed') {
+          processingCompleted = true;
+          break;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      }
+
+      if (!processingCompleted) {
+        throw new Error('Document processing did not complete in time');
+      }
+
+      // Now generate the summary
+      console.log('Generating summary...');
       const { error } = await supabase.functions.invoke('generate-document-summary', {
         body: {
           documentId: documentId,
@@ -122,7 +166,7 @@ const Workspace = () => {
       console.error('Error regenerating summary:', error);
       toast({
         title: "Error",
-        description: "Failed to regenerate document summary",
+        description: "Failed to regenerate document summary. Please try again.",
         variant: "destructive",
       });
     } finally {
