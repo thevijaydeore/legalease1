@@ -75,17 +75,25 @@ serve(async (req) => {
     const relevantChunks = searchResults.matches || [];
 
     console.log(`Found ${relevantChunks.length} relevant chunks`);
+    
+    // Log chunk scores for debugging
+    relevantChunks.forEach((match: any, index: number) => {
+      console.log(`Chunk ${index + 1} score: ${match.score}`);
+    });
 
-    // Step 3: Prepare context from retrieved chunks
-    const context = relevantChunks
-      .filter((match: any) => match.score > 0.7) // Filter by relevance score
+    // Step 3: Prepare context from retrieved chunks with dynamic threshold
+    const filteredChunks = relevantChunks.filter((match: any) => match.score > 0.5); // Lower threshold
+    
+    console.log(`${filteredChunks.length} chunks passed the 0.5 score threshold`);
+    
+    const context = filteredChunks
       .map((match: any, index: number) => {
         const metadata = match.metadata;
         return `[Document: ${metadata.document_title}]\n${metadata.chunk_text}`;
       })
       .join('\n\n---\n\n');
 
-    if (!context) {
+    if (filteredChunks.length === 0) {
       return new Response(JSON.stringify({
         answer: "I couldn't find any relevant information in your documents to answer that question. Please try rephrasing your query or upload more relevant documents.",
         sources: []
@@ -135,8 +143,7 @@ Guidelines:
     const answer = chatData.choices[0].message.content;
 
     // Prepare sources information
-    const sources = relevantChunks
-      .filter((match: any) => match.score > 0.7)
+    const sources = filteredChunks
       .map((match: any) => ({
         document_title: match.metadata.document_title,
         chunk_text: match.metadata.chunk_text.substring(0, 200) + '...',
