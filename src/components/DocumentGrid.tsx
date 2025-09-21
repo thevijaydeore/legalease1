@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 import { FileText, Download, Trash2, Eye, Search, Filter } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ interface Document {
 }
 
 export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,6 +118,20 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
       toast({
         title: "Error",
         description: "Failed to delete document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    if (doc.analysis_status === "completed") {
+      navigate(`/workspace?docId=${doc.id}`);
+    } else if (doc.analysis_status === "pending" || doc.analysis_status === "processing") {
+      navigate(`/rag?docId=${doc.id}`);
+    } else {
+      toast({
+        title: "Cannot View Document",
+        description: "Document processing failed. Please try uploading again.",
         variant: "destructive",
       });
     }
@@ -250,7 +266,7 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDocument(doc)}>
                     <Eye className="h-3 w-3 mr-1" />
                     View
                   </Button>
