@@ -18,14 +18,16 @@ export function DocumentUploadModal({ open, onOpenChange }: DocumentUploadModalP
   const { toast } = useToast();
 
   const handleProcessDocument = async (content: string) => {
-    // If upload message contains a real Document ID, redirect to dashboard chat
+    // If upload message contains a real Document ID, redirect to RAG processing page
     if (content.includes('Document ID:')) {
+      const match = content.match(/Document ID:\s*([a-f0-9\-]+)/i);
+      const docId = match?.[1];
       toast({
         title: "Document Uploaded!",
-        description: "Taking you to your dashboard to chat with the document...",
+        description: "Starting AI processing...",
       });
       onOpenChange(false);
-      navigate('/dashboard');
+      navigate(docId ? `/rag?docId=${docId}` : '/rag');
       return;
     }
 
