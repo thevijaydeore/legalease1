@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { documentId, userId } = await req.json();
+    console.log(`Starting summary generation for document: ${documentId}, user: ${userId}`);
 
     if (!documentId || !userId) {
       return new Response(JSON.stringify({ error: 'Missing documentId or userId' }), {
@@ -43,8 +44,11 @@ serve(async (req) => {
       .single();
 
     if (docError || !document) {
+      console.error('Document fetch error:', docError);
       throw new Error('Document not found');
     }
+    
+    console.log(`Found document: ${document.title}`);
 
     const { data: chunks, error: chunksError } = await supabase
       .from('document_chunks')
@@ -53,11 +57,21 @@ serve(async (req) => {
       .order('chunk_index');
 
     if (chunksError || !chunks) {
+      console.error('Chunks fetch error:', chunksError);
       throw new Error('Failed to retrieve document chunks');
     }
+    
+    console.log(`Found ${chunks.length} chunks for document`);
 
     // Combine all chunks into full text (limit to ~8000 chars for API limits)
     const fullText = chunks.map(chunk => chunk.chunk_text).join('\n').substring(0, 8000);
+    
+    console.log(`Full text length: ${fullText.length} characters`);
+    
+    if (fullText.length < 100) {
+      console.error('Document text too short for analysis:', fullText.length);
+      throw new Error('Document content is too short for meaningful analysis');
+    }
 
     // Generate summary using OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -94,22 +108,41 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, response.statusText, errorText);
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
+    
+    console.log('OpenAI API response received successfully');
 
     const aiResponse = await response.json();
     let summaryData;
     
+    console.log('Raw AI response:', aiResponse.choices[0].message.content);
+    
     try {
       summaryData = JSON.parse(aiResponse.choices[0].message.content);
+      console.log('Successfully parsed AI response to JSON');
     } catch (parseError) {
-      // Fallback if JSON parsing fails
-      summaryData = {
-        key_clauses: ["Document analysis completed", "Content processed successfully"],
-        risks: [{"level": "Medium", "description": "Document requires manual review for specific risk assessment"}],
-        obligations: ["Review document thoroughly", "Consult legal counsel as needed"],
-        recommendations: ["Manual document review recommended", "Consider legal consultation"]
-      };
+      console.error('Failed to parse AI response as JSON:', parseError);
+      console.error('Raw content was:', aiResponse.choices[0].message.content);
+      
+      // Try to extract JSON from the response if it's wrapped in markdown
+      const content = aiResponse.choices[0].message.content;
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        try {
+          summaryData = JSON.parse(jsonMatch[0]);
+          console.log('Successfully extracted and parsed JSON from markdown');
+        } catch (extractError) {
+          console.error('Failed to parse extracted JSON:', extractError);
+          throw new Error('Failed to parse AI response - invalid JSON format');
+        }
+      } else {
+        console.error('No JSON structure found in AI response');
+        throw new Error('AI response does not contain valid JSON structure');
+      }
     }
 
     // Store or update the summary in the database
@@ -125,7 +158,10 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating document with summary:', updateError);
+      throw new Error('Failed to save summary to database');
     }
+    
+    console.log('Summary successfully generated and saved to database');
 
     return new Response(JSON.stringify({ 
       success: true,
