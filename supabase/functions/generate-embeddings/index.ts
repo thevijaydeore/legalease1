@@ -13,16 +13,36 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let parsedDocumentId: string | undefined;
+  let parsedUserId: string | undefined;
+
   try {
-    const { documentId, userId } = await req.json();
+    // Parse body once and keep ids available for catch block
+    const body = await req.json().catch(() => ({}));
+    parsedDocumentId = body.documentId;
+    parsedUserId = body.userId;
+
+    if (!parsedDocumentId || !parsedUserId) {
+      return new Response(JSON.stringify({ error: 'Missing documentId or userId' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Aliases used throughout the rest of the function
+    const documentId: string = parsedDocumentId as string;
+    const userId: string = parsedUserId as string;
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    const pineconeApiKey = Deno.env.get('PINECONE_API_KEY');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('openai_api_key');
+    const pineconeApiKey = Deno.env.get('PINECONE_API_KEY') || Deno.env.get('pinecone_api_key');
 
     if (!openaiApiKey || !pineconeApiKey) {
-      throw new Error('Missing required API keys');
+      return new Response(JSON.stringify({ error: 'Missing required API keys (OpenAI or Pinecone)' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -143,15 +163,16 @@ serve(async (req) => {
     
     // Update document status to failed
     try {
-      const { documentId } = await req.clone().json();
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      await supabase
-        .from('documents')
-        .update({ embedding_status: 'failed' })
-        .eq('id', documentId);
+      if (parsedDocumentId) {
+        await supabase
+          .from('documents')
+          .update({ embedding_status: 'failed' })
+          .eq('id', parsedDocumentId);
+      }
     } catch (e) {
       console.error('Failed to update document status:', e);
     }
