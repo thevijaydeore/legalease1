@@ -18,11 +18,12 @@ serve(async (req) => {
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    const openaiApiKey = Deno.env.get('openai_api_key');
     const pineconeApiKey = Deno.env.get('PINECONE_API_KEY');
+    const pineconeIndexUrl = Deno.env.get('PINECONE_INDEX_URL');
 
-    if (!openaiApiKey || !pineconeApiKey) {
-      throw new Error('Missing required API keys');
+    if (!openaiApiKey || !pineconeApiKey || !pineconeIndexUrl) {
+      throw new Error('Missing required API keys or Pinecone index URL');
     }
 
     console.log('Processing RAG query:', query);
@@ -49,12 +50,12 @@ serve(async (req) => {
     const queryEmbedding = embeddingData.data[0].embedding;
 
     // Step 2: Search Pinecone for relevant chunks
-    const pineconeIndexUrl = 'https://your-index-name-project-id.svc.gcp-starter.pinecone.io'; // Replace with your actual index URL
+    console.log('Using Pinecone index URL:', pineconeIndexUrl);
     
     const searchResponse = await fetch(`${pineconeIndexUrl}/query`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${pineconeApiKey}`,
+        'Api-Key': pineconeApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
