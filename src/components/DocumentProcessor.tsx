@@ -118,9 +118,24 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
 
     } catch (error) {
       console.error('Error processing document:', error);
+      
+      // Handle different types of errors
+      let errorMessage = 'An unexpected error occurred while processing your document.';
+      let errorTitle = 'Processing Error';
+      
+      if (error?.message?.includes('FunctionsHttpError')) {
+        errorMessage = 'The document processing service is temporarily unavailable. Please try again in a few moments.';
+        errorTitle = 'Service Unavailable';
+      } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+        errorTitle = 'Connection Error';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Error",
-        description: `Failed to process document: ${error.message}`,
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

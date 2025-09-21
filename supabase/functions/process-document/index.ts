@@ -50,15 +50,27 @@ serve(async (req) => {
     // Extract text content based on file type
     let textContent = '';
     
-    if (document.file_type?.includes('text') || document.file_type?.includes('plain')) {
-      textContent = await fileData.text();
-    } else if (document.file_type?.includes('pdf')) {
-      // For PDF processing, we'll need a more sophisticated approach
-      // For now, just handle text files and add PDF processing later
-      textContent = await fileData.text();
-    } else {
-      // Try to read as text anyway
-      textContent = await fileData.text();
+    try {
+      if (document.file_type?.includes('text') || document.file_type?.includes('plain')) {
+        textContent = await fileData.text();
+      } else if (document.file_type?.includes('pdf')) {
+        // For PDF processing, we'll need a more sophisticated approach
+        // For now, just handle text files and add PDF processing later
+        textContent = await fileData.text();
+      } else {
+        // Try to read as text anyway
+        textContent = await fileData.text();
+      }
+
+      // Sanitize text content to remove null bytes and other problematic characters
+      textContent = sanitizeText(textContent);
+      
+      if (!textContent || textContent.trim().length === 0) {
+        throw new Error('No readable text content found in document');
+      }
+    } catch (textError) {
+      console.error('Error extracting text:', textError);
+      throw new Error(`Failed to extract text from document: ${textError.message}`);
     }
 
     // Chunk the text (simple approach - split by sentences with overlap)
@@ -71,7 +83,7 @@ serve(async (req) => {
       document_id: documentId,
       user_id: userId,
       chunk_index: index,
-      chunk_text: chunk,
+      chunk_text: sanitizeText(chunk), // Ensure chunks are sanitized too
       token_count: estimateTokenCount(chunk),
       pinecone_id: `${documentId}-chunk-${index}`
     }));
@@ -109,21 +121,36 @@ serve(async (req) => {
     console.error('Error processing document:', error);
     
     // Update document status to failed if we have the documentId
+    let docId = null;
     try {
-      const { documentId } = await req.clone().json();
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
-      await supabase
-        .from('documents')
-        .update({ processing_status: 'failed' })
-        .eq('id', documentId);
-    } catch (e) {
-      console.error('Failed to update document status:', e);
+      const requestBody = await req.json();
+      docId = requestBody.documentId;
+    } catch (parseError) {
+      console.error('Could not parse request body for error handling:', parseError);
+    }
+    
+    if (docId) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        await supabase
+          .from('documents')
+          .update({ processing_status: 'failed' })
+          .eq('id', docId);
+      } catch (e) {
+        console.error('Failed to update document status:', e);
+      }
     }
 
-    return new Response(JSON.stringify({ error: error.message }), {
+    // Return user-friendly error response
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: 'Document processing failed. Please try again with a different file or contact support.',
+      code: 'PROCESSING_FAILED'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -159,6 +186,17 @@ function chunkText(text: string, maxTokens: number, overlap: number): string[] {
   }
 
   return chunks;
+}
+
+function sanitizeText(text: string): string {
+  if (!text) return '';
+  
+  // Remove null bytes and other problematic Unicode characters
+  return text
+    .replace(/\u0000/g, '') // Remove null bytes
+    .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '') // Remove control characters
+    .replace(/\uFFFD/g, '') // Remove replacement characters
+    .trim();
 }
 
 function estimateTokenCount(text: string): number {
