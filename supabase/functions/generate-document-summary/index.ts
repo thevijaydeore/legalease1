@@ -137,11 +137,13 @@ serve(async (req) => {
           console.log('Successfully extracted and parsed JSON from markdown');
         } catch (extractError) {
           console.error('Failed to parse extracted JSON:', extractError);
-          throw new Error('Failed to parse AI response - invalid JSON format');
+          // Fall back to creating a summary based on the AI's text response
+          summaryData = createFallbackSummary(content, document);
         }
       } else {
-        console.error('No JSON structure found in AI response');
-        throw new Error('AI response does not contain valid JSON structure');
+        console.log('No JSON structure found, creating fallback summary from AI response');
+        // Create a fallback summary when AI returns explanatory text
+        summaryData = createFallbackSummary(content, document);
       }
     }
 
@@ -179,3 +181,74 @@ serve(async (req) => {
     });
   }
 });
+
+// Helper function to create a fallback summary when AI response can't be parsed as JSON
+function createFallbackSummary(aiResponseText: string, document: any) {
+  console.log('Creating fallback summary from AI response text');
+  
+  // Check if AI indicated the document is unreadable or corrupted
+  const isCorrupted = aiResponseText.toLowerCase().includes('corrupted') || 
+                     aiResponseText.toLowerCase().includes('unreadable') || 
+                     aiResponseText.toLowerCase().includes('cannot');
+  
+  if (isCorrupted) {
+    return {
+      key_clauses: [
+        "Document processing issue detected",
+        "Text extraction may be incomplete",
+        "Manual review recommended",
+        "Consider re-uploading document in a different format"
+      ],
+      risks: [
+        {
+          level: "High",
+          description: "Document text extraction failed - content may be corrupted or unreadable. Legal analysis cannot be performed reliably."
+        },
+        {
+          level: "Medium", 
+          description: "Incomplete document analysis - key terms and clauses may be missing from review."
+        }
+      ],
+      obligations: [
+        "Verify document integrity and readability",
+        "Consider converting document to text format",
+        "Perform manual review of original document",
+        "Re-upload document if text extraction fails"
+      ],
+      recommendations: [
+        "Upload document in text format (.txt) or Word format (.docx) for better processing",
+        "Ensure PDF is text-based rather than image-based",
+        "Verify document is not password-protected or encrypted",
+        "Contact support if processing issues persist",
+        "Perform manual legal review as backup"
+      ]
+    };
+  }
+  
+  // If AI provided some analysis but not in JSON format, create a basic summary
+  return {
+    key_clauses: [
+      `Document type: ${document.file_type || 'Unknown'}`,
+      `File size: ${Math.round(document.file_size / 1024)} KB`,
+      "AI analysis provided in text format",
+      "Manual review recommended for accuracy"
+    ],
+    risks: [
+      {
+        level: "Medium",
+        description: "Automated analysis incomplete - structured summary could not be generated from document content."
+      }
+    ],
+    obligations: [
+      "Review original document manually",
+      "Verify AI analysis accuracy",
+      "Consider document format optimization"
+    ],
+    recommendations: [
+      "Review the original document for complete analysis",
+      "Consider uploading in a more compatible format",
+      "Perform manual legal review for important documents",
+      "Contact legal counsel for complex matters"
+    ]
+  };
+}
