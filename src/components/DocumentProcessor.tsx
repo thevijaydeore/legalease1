@@ -190,86 +190,119 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
     return 0;
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Document Processing</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Loading documents...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5" />
-          Document Processing
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {documents.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p>No documents uploaded yet.</p>
-            <p className="text-sm mt-2">Upload some documents to get started!</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {documents.map((doc) => (
-              <div key={doc.id} className="border rounded-lg p-4">
+    <div className="space-y-6">
+      {isLoading ? (
+        <Card className="shadow-card border-0">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center">
+              <RefreshCw className="h-6 w-6 animate-spin text-primary mr-3" />
+              <span className="text-neutral-dark">Loading documents...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : documents.length === 0 ? (
+        <Card className="shadow-card border-0">
+          <CardContent className="p-8">
+            <div className="text-center text-neutral-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 text-neutral-foreground/50" />
+              <p className="text-lg mb-2">No documents to process</p>
+              <p className="text-sm">Upload a document to begin processing</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        documents.map((doc) => (
+          <Card key={doc.id} className="shadow-card border-0">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Document Info */}
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-medium">{doc.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {doc.original_filename} • {doc.file_type}
+                  <div>
+                    <h3 className="font-semibold text-neutral-dark text-lg">{doc.original_filename}</h3>
+                    <p className="text-sm text-neutral-foreground">
+                      {doc.file_type.toUpperCase()} • Uploaded {new Date(doc.created_at).toLocaleDateString()}
                     </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      {getStatusIcon(doc.processing_status, doc.embedding_status)}
-                      <Badge variant={getStatusVariant(doc.processing_status, doc.embedding_status)}>
-                        {getStatusText(doc.processing_status, doc.embedding_status)}
-                      </Badge>
-                      {doc.chunks_count > 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          {doc.chunks_count} chunks
-                        </span>
-                      )}
-                    </div>
-                    
-                    <Progress 
-                      value={getProgress(doc.processing_status, doc.embedding_status)} 
-                      className="mt-2 h-2"
-                    />
                   </div>
                   
-                  <div className="ml-4">
-                    {canProcess(doc.processing_status, doc.embedding_status) && (
-                      <Button
-                        onClick={() => processDocument(doc.id)}
-                        disabled={processingDocs.has(doc.id)}
-                        size="sm"
-                      >
-                        {processingDocs.has(doc.id) ? (
-                          <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Zap className="h-4 w-4 mr-2" />
-                        )}
-                        {processingDocs.has(doc.id) ? 'Processing...' : 'Process'}
-                      </Button>
-                    )}
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(doc.processing_status, doc.embedding_status)}
+                    <Badge 
+                      variant={getStatusVariant(doc.processing_status, doc.embedding_status)}
+                      className="text-xs px-3 py-1"
+                    >
+                      {getStatusText(doc.processing_status, doc.embedding_status)}
+                    </Badge>
                   </div>
                 </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-foreground">Processing Progress</span>
+                    <span className="text-neutral-dark font-medium">
+                      {getProgress(doc.processing_status, doc.embedding_status)}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={getProgress(doc.processing_status, doc.embedding_status)} 
+                    className="h-3 bg-neutral-light"
+                  />
+                </div>
+
+                {/* Status Details */}
+                {(doc.processing_status === 'processing' || doc.embedding_status === 'processing') && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                      <span className="text-neutral-dark">
+                        {doc.processing_status === 'processing' 
+                          ? 'Extracting text and analyzing document structure...' 
+                          : 'Creating embeddings for intelligent search and conversation...'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Process Button */}
+                {canProcess(doc.processing_status, doc.embedding_status) && (
+                  <Button
+                    onClick={() => processDocument(doc.id)}
+                    disabled={processingDocs.has(doc.id)}
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
+                    size="lg"
+                  >
+                    {processingDocs.has(doc.id) ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                        Processing Document...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Start Processing
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                {/* Completed Status */}
+                {doc.processing_status === 'ready' && doc.embedding_status === 'completed' && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-green-800">
+                        Document processed successfully! Redirecting to workspace...
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
   );
 };
