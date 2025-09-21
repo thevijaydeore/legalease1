@@ -113,16 +113,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader>
+    <Card className="flex flex-col h-full max-h-[calc(100vh-2rem)]">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5" />
           Chat with Your Documents
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col">
-        <ScrollArea className="flex-1 pr-4">
+      <CardContent className="flex-1 flex flex-col min-h-0 p-6">
+        <ScrollArea className="flex-1 pr-4 min-h-0">
           <div className="space-y-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
