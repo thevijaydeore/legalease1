@@ -118,6 +118,7 @@ serve(async (req) => {
       .update({ 
         summary_data: summaryData,
         summary_generated: true,
+        analysis_status: 'completed',
         updated_at: new Date().toISOString()
       })
       .eq('id', documentId);
