@@ -114,13 +114,18 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
 
       if (embeddingError) throw embeddingError;
 
+      // First refresh the document list to get updated status
+      await fetchDocuments();
+      
       toast({
         title: "Success",
         description: "Document processed and ready for chat!",
       });
 
-      onDocumentReady?.(documentId);
-      await fetchDocuments(); // Refresh the list
+      // Small delay to ensure UI shows success, then redirect
+      setTimeout(() => {
+        onDocumentReady?.(documentId);
+      }, 1500);
 
     } catch (error) {
       console.error('Error processing document:', error);
@@ -314,9 +319,16 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <span className="text-green-800">
-                        Document processed successfully! Redirecting to workspace...
+                        Document processed successfully! Ready for analysis.
                       </span>
                     </div>
+                    <Button
+                      onClick={() => onDocumentReady?.(doc.id)}
+                      className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white"
+                      size="sm"
+                    >
+                      Open Workspace
+                    </Button>
                   </div>
                 )}
               </div>
