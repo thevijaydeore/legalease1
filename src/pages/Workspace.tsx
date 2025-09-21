@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChatInterface } from '@/components/ChatInterface';
-import { ArrowLeft, Download, FileText, AlertTriangle, Shield, Scale, BookOpen } from 'lucide-react';
+import { ArrowLeft, Download, FileText, AlertTriangle, Shield, Scale, BookOpen, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import {
@@ -38,6 +38,7 @@ const Workspace = () => {
   const [document, setDocument] = useState<Document | null>(null);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -94,6 +95,39 @@ const Workspace = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const regenerateSummary = async () => {
+    if (!document || !documentId) return;
+    
+    setIsRegenerating(true);
+    try {
+      const { error } = await supabase.functions.invoke('generate-document-summary', {
+        body: {
+          documentId: documentId,
+          userId: getUserId()
+        }
+      });
+
+      if (error) throw error;
+
+      // Refresh the document data to get the updated summary
+      await fetchDocument();
+      
+      toast({
+        title: "Success",
+        description: "Document summary has been regenerated successfully",
+      });
+    } catch (error) {
+      console.error('Error regenerating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate document summary",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   if (isLoading) {
@@ -173,13 +207,29 @@ const Workspace = () => {
           <div className="space-y-6">
             <Card className="shadow-card border-0">
               <CardHeader>
-                <CardTitle className="text-xl text-neutral-dark flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  Detailed Summary
-                </CardTitle>
-                <p className="text-neutral-foreground text-sm">
-                  Structured, well-organized summary of your legal document with key insights.
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl text-neutral-dark flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Detailed Summary
+                    </CardTitle>
+                    <p className="text-neutral-foreground text-sm">
+                      Structured, well-organized summary of your legal document with key insights.
+                    </p>
+                  </div>
+                  {document?.summary_generated && (
+                    <Button
+                      onClick={regenerateSummary}
+                      disabled={isRegenerating}
+                      variant="outline"
+                      size="sm"
+                      className="ml-4"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${isRegenerating ? 'animate-spin' : ''}`} />
+                      {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {document?.summary_generated ? (
