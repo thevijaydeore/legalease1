@@ -6,39 +6,56 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Function to extract text from PDF - simplified approach
+// Function to extract text from PDF - improved text cleaning
 async function extractPdfText(pdfBuffer: Blob): Promise<string> {
   try {
-    // For now, try to read PDF as text (this works for some simple PDFs)
-    // In production, you'd want to use a proper PDF parsing library
-    const text = await pdfBuffer.text();
+    const arrayBuffer = await pdfBuffer.arrayBuffer();
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    let rawText = decoder.decode(arrayBuffer);
     
-    // Basic cleanup of PDF text artifacts
-    return text
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '') // Remove control characters
-      .replace(/\s+/g, ' ') // Normalize whitespace
+    // More aggressive PDF text cleaning
+    let cleanText = rawText
+      // Remove PDF structure markers and commands
+      .replace(/<<[^>]*>>/g, ' ')
+      .replace(/\/[A-Za-z]+\s*/g, ' ')
+      .replace(/\b\d+\s+\d+\s+obj\b/g, ' ')
+      .replace(/\bendobj\b/g, ' ')
+      .replace(/\bstream\b[\s\S]*?\bendstream\b/g, ' ')
+      .replace(/\bxref\b[\s\S]*?\btrailer\b/g, ' ')
+      .replace(/%%[^%\n]*%%/g, ' ')
+      // Remove control characters but keep line breaks
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
+      // Remove sequences of non-printable characters
+      .replace(/[^\x20-\x7E\n\r\t]+/g, ' ')
+      // Clean up whitespace
+      .replace(/\s+/g, ' ')
       .trim();
+    
+    // Extract meaningful sentences (words with spaces)
+    const sentences = cleanText.split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => {
+        // Keep sentences that have at least 3 words and reasonable length
+        const words = s.split(/\s+/).filter(w => w.length > 2);
+        return words.length >= 3 && s.length >= 20 && s.length <= 1000;
+      });
+    
+    if (sentences.length === 0) {
+      throw new Error('No readable sentences found in PDF');
+    }
+    
+    const finalText = sentences.join('. ').trim();
+    
+    if (finalText.length < 100) {
+      throw new Error('Extracted text is too short for meaningful analysis');
+    }
+    
+    console.log(`Cleaned PDF text: ${finalText.substring(0, 200)}...`);
+    return finalText;
+    
   } catch (error) {
     console.error('PDF text extraction error:', error);
-    // If text extraction fails, try reading as binary and converting
-    try {
-      const arrayBuffer = await pdfBuffer.arrayBuffer();
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      let text = decoder.decode(arrayBuffer);
-      
-      // Extract readable text from PDF binary
-      text = text.replace(/[^\x20-\x7E\s]/g, ' ') // Keep only printable ASCII and whitespace
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      if (text.length < 50) {
-        throw new Error('Could not extract readable text from PDF. Please convert to a text file or try a different PDF.');
-      }
-      
-      return text;
-    } catch (fallbackError) {
-      throw new Error(`Failed to extract text from PDF: ${fallbackError.message}`);
-    }
+    throw new Error(`Failed to extract readable text from PDF: ${error.message}. Please try uploading a text-based PDF or convert to a text file.`);
   }
 }
 
@@ -106,8 +123,8 @@ serve(async (req) => {
         throw new Error('No readable text content found in document');
       }
       
-      if (textContent.length < 50) {
-        throw new Error('Document content is too short for meaningful analysis');
+      if (textContent.length < 100) {
+        throw new Error('Document content is too short for meaningful analysis (minimum 100 characters required)');
       }
     } catch (textError) {
       console.error('Error extracting text:', textError);
