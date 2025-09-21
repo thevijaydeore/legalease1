@@ -111,7 +111,7 @@ const Upload = () => {
         title: "Document Uploaded!",
         description: "Starting AI processing...",
       });
-      navigate(docId ? `/rag?docId=${docId}` : '/rag');
+      navigate(docId ? `/workspace?docId=${docId}` : '/workspace');
       return;
     }
 
