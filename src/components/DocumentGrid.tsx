@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
-import { FileText, Download, Trash2, Eye, Search, Filter } from "lucide-react";
+import { FileText, Download, Trash2, Eye, Search, Filter, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [regeneratingIds, setRegeneratingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchDocuments();
@@ -133,6 +134,62 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
         title: "Cannot View Document",
         description: "Document processing failed. Please try uploading again.",
         variant: "destructive",
+      });
+    }
+  };
+
+  const handleRegenerateSummary = async (documentId: string) => {
+    setRegeneratingIds(prev => new Set(prev).add(documentId));
+    
+    try {
+      toast({
+        title: "Regenerating Summary",
+        description: "Reprocessing document and generating new summary...",
+      });
+
+      // First, cleanup and reprocess the document
+      const { error: cleanupError } = await supabase.functions.invoke('cleanup-and-reprocess', {
+        body: { documentId, userId: user.id }
+      });
+
+      if (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+        throw new Error('Failed to cleanup document');
+      }
+
+      // Wait a moment for processing to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Then generate new summary
+      const { data, error } = await supabase.functions.invoke('generate-document-summary', {
+        body: { documentId, userId: user.id }
+      });
+
+      if (error) {
+        console.error('Summary generation error:', error);
+        throw new Error('Failed to generate summary');
+      }
+
+      toast({
+        title: "Success",
+        description: "Summary has been regenerated successfully.",
+      });
+
+      // Refresh the documents list
+      fetchDocuments();
+      
+    } catch (error) {
+      console.error('Error regenerating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate summary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRegeneratingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(documentId);
+        return newSet;
       });
     }
   };
@@ -265,20 +322,37 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
                   <div>Uploaded: {new Date(doc.upload_date).toLocaleDateString()}</div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDocument(doc)}>
-                    <Eye className="h-3 w-3 mr-1" />
-                    View
-                  </Button>
-                  <Button size="sm" variant="outline" disabled={doc.analysis_status !== "completed"} className="flex-1">
-                    <Download className="h-3 w-3 mr-1" />
-                    Export
-                  </Button>
-                  <AlertDialog>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDocument(doc)}>
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={doc.analysis_status !== "completed"} className="flex-1">
+                      <Download className="h-3 w-3 mr-1" />
+                      Export
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={() => handleRegenerateSummary(doc.id)}
+                      disabled={doc.analysis_status !== "completed" || regeneratingIds.has(doc.id)}
+                    >
+                      {regeneratingIds.has(doc.id) ? (
+                        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                      )}
+                      {regeneratingIds.has(doc.id) ? "Regenerating..." : "Regenerate Summary"}
+                    </Button>
+                    <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive w-full sm:w-auto">
-                        <Trash2 className="h-3 w-3 mr-1 sm:mr-0" />
-                        <span className="sm:hidden">Delete</span>
+                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="mx-4">
@@ -298,7 +372,8 @@ export function DocumentGrid({ user, onOpenUploadModal }: DocumentGridProps) {
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
-                  </AlertDialog>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>

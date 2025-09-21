@@ -34,6 +34,7 @@ export const DocumentSummary: React.FC<DocumentSummaryProps> = ({
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [documentSummaries, setDocumentSummaries] = useState<Record<string, string>>({});
+  const [regeneratingIds, setRegeneratingIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +80,62 @@ export const DocumentSummary: React.FC<DocumentSummaryProps> = ({
       ...prev,
       [documentId]: mockSummary
     }));
+  };
+
+  const handleRegenerateSummary = async (documentId: string) => {
+    setRegeneratingIds(prev => new Set(prev).add(documentId));
+    
+    try {
+      toast({
+        title: "Regenerating Summary",
+        description: "Reprocessing document and generating new summary...",
+      });
+
+      // First, cleanup and reprocess the document
+      const { error: cleanupError } = await supabase.functions.invoke('cleanup-and-reprocess', {
+        body: { documentId, userId }
+      });
+
+      if (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+        throw new Error('Failed to cleanup document');
+      }
+
+      // Wait a moment for processing to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Then generate new summary
+      const { data, error } = await supabase.functions.invoke('generate-document-summary', {
+        body: { documentId, userId }
+      });
+
+      if (error) {
+        console.error('Summary generation error:', error);
+        throw new Error('Failed to generate summary');
+      }
+
+      toast({
+        title: "Success",
+        description: "Summary has been regenerated successfully.",
+      });
+
+      // Refresh the documents list
+      fetchDocuments();
+      
+    } catch (error) {
+      console.error('Error regenerating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate summary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRegeneratingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(documentId);
+        return newSet;
+      });
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -169,14 +226,30 @@ export const DocumentSummary: React.FC<DocumentSummaryProps> = ({
 
                   {selectedDocumentId === doc.id && (
                     <div className="mt-3 pt-3 border-t">
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-3 w-3 mr-1" />
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Download className="h-3 w-3 mr-1" />
-                          Download
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-3 w-3 mr-1" />
+                            View Details
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleRegenerateSummary(doc.id)}
+                          disabled={regeneratingIds.has(doc.id)}
+                          className="w-full"
+                        >
+                          {regeneratingIds.has(doc.id) ? (
+                            <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                          )}
+                          {regeneratingIds.has(doc.id) ? "Regenerating..." : "Regenerate Summary"}
                         </Button>
                       </div>
                     </div>
