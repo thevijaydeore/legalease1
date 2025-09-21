@@ -124,7 +124,7 @@ serve(async (req) => {
     const pineconeResponse = await fetch(`${pineconeIndexUrl}/vectors/upsert`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${pineconeApiKey}`,
+        'Api-Key': pineconeApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
