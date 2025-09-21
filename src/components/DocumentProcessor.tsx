@@ -37,7 +37,7 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
 
   useEffect(() => {
     fetchDocuments();
-  }, [userId]);
+  }, [userId, autoProcessDocumentId]);
 
   // Auto-process the target document when available
   useEffect(() => {
@@ -63,11 +63,17 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
 
   const fetchDocuments = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('documents')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('user_id', userId);
+
+      // If autoProcessDocumentId is provided, only fetch that specific document
+      if (autoProcessDocumentId) {
+        query = query.eq('id', autoProcessDocumentId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
 
