@@ -114,6 +114,19 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
 
       if (embeddingError) throw embeddingError;
 
+      // Step 3: Generate document summary for detailed analysis
+      const { error: summaryError } = await supabase.functions.invoke('generate-document-summary', {
+        body: {
+          documentId,
+          userId
+        }
+      });
+
+      if (summaryError) {
+        console.error('Summary generation failed:', summaryError);
+        // Don't throw error here - document is still usable without summary
+      }
+
       // First refresh the document list to get updated status
       await fetchDocuments();
       

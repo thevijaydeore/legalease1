@@ -20,6 +20,15 @@ interface Document {
   file_type: string;
   file_size: number;
   created_at: string;
+  summary_data?: any; // JSON data from Supabase
+  summary_generated?: boolean;
+}
+
+interface SummaryData {
+  key_clauses: string[];
+  risks: Array<{level: string; description: string}>;
+  obligations: string[];
+  recommendations: string[];
 }
 
 const Workspace = () => {
@@ -173,80 +182,91 @@ const Workspace = () => {
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Key Clauses Section */}
-                <Collapsible defaultOpen>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Scale className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-neutral-dark">Key Clauses</span>
-                    </div>
-                    <div className="text-xs text-neutral-foreground">Click to expand</div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
-                    <div className="space-y-3 text-sm text-neutral-foreground">
-                      <p>• <strong>Payment Terms:</strong> Analysis of payment schedules, due dates, and penalty clauses</p>
-                      <p>• <strong>Termination Clauses:</strong> Conditions under which the agreement can be terminated</p>
-                      <p>• <strong>Liability Limitations:</strong> Scope and extent of liability coverage and exclusions</p>
-                      <p>• <strong>Governing Law:</strong> Jurisdiction and applicable legal framework</p>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                {document?.summary_generated ? (
+                  <>
+                    {/* Key Clauses Section */}
+                    <Collapsible defaultOpen>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Scale className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-neutral-dark">Key Clauses</span>
+                        </div>
+                        <div className="text-xs text-neutral-foreground">Click to expand</div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
+                        <div className="space-y-3 text-sm text-neutral-foreground">
+                          {(document.summary_data as SummaryData)?.key_clauses?.map((clause, index) => (
+                            <p key={index}>• {clause}</p>
+                          )) || <p>No key clauses identified</p>}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                {/* Risks Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-destructive" />
-                      <span className="font-medium text-neutral-dark">Identified Risks</span>
-                    </div>
-                    <div className="text-xs text-neutral-foreground">Click to expand</div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
-                    <div className="space-y-3 text-sm text-neutral-foreground">
-                      <p>• <strong>High Risk:</strong> Unlimited liability exposure in certain scenarios</p>
-                      <p>• <strong>Medium Risk:</strong> Ambiguous language in dispute resolution clauses</p>
-                      <p>• <strong>Low Risk:</strong> Standard commercial terms with industry benchmarks</p>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                    {/* Risks Section */}
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-destructive" />
+                          <span className="font-medium text-neutral-dark">Identified Risks</span>
+                        </div>
+                        <div className="text-xs text-neutral-foreground">Click to expand</div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
+                        <div className="space-y-3 text-sm text-neutral-foreground">
+                          {(document.summary_data as SummaryData)?.risks?.map((risk, index) => (
+                            <p key={index}>• <strong>{risk.level} Risk:</strong> {risk.description}</p>
+                          )) || <p>No risks identified</p>}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                {/* Obligations Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-neutral-dark">Your Obligations</span>
-                    </div>
-                    <div className="text-xs text-neutral-foreground">Click to expand</div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
-                    <div className="space-y-3 text-sm text-neutral-foreground">
-                      <p>• <strong>Performance Standards:</strong> Quality benchmarks and delivery requirements</p>
-                      <p>• <strong>Reporting Requirements:</strong> Regular updates and documentation needed</p>
-                      <p>• <strong>Compliance Obligations:</strong> Regulatory and industry standards to maintain</p>
-                      <p>• <strong>Confidentiality:</strong> Information protection and non-disclosure requirements</p>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                    {/* Obligations Section */}
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-neutral-dark">Your Obligations</span>
+                        </div>
+                        <div className="text-xs text-neutral-foreground">Click to expand</div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
+                        <div className="space-y-3 text-sm text-neutral-foreground">
+                          {(document.summary_data as SummaryData)?.obligations?.map((obligation, index) => (
+                            <p key={index}>• {obligation}</p>
+                          )) || <p>No specific obligations identified</p>}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                {/* Recommendations Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-neutral-dark">Recommendations</span>
+                    {/* Recommendations Section */}
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-neutral-dark">Recommendations</span>
+                        </div>
+                        <div className="text-xs text-neutral-foreground">Click to expand</div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
+                        <div className="space-y-3 text-sm text-neutral-foreground">
+                          {(document.summary_data as SummaryData)?.recommendations?.map((recommendation, index) => (
+                            <p key={index}>• {recommendation}</p>
+                          )) || <p>No specific recommendations available</p>}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-muted rounded w-3/4 mx-auto mb-2"></div>
+                      <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
                     </div>
-                    <div className="text-xs text-neutral-foreground">Click to expand</div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-2 p-4 bg-card rounded-lg border">
-                    <div className="space-y-3 text-sm text-neutral-foreground">
-                      <p>• <strong>Review Clause 12:</strong> Consider adding specific performance metrics</p>
-                      <p>• <strong>Legal Consultation:</strong> Consult with specialized counsel on IP provisions</p>
-                      <p>• <strong>Insurance Coverage:</strong> Verify adequate coverage for identified liabilities</p>
-                      <p>• <strong>Amendment Needed:</strong> Clarify dispute resolution mechanism</p>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                    <p className="text-neutral-foreground mt-4">
+                      Generating detailed document analysis...
+                    </p>
+                  </div>
+                )}
 
                 {/* Download Button */}
                 <div className="pt-4">

@@ -104,6 +104,8 @@ export type Database = {
           id: string
           original_filename: string
           processing_status: string | null
+          summary_data: Json | null
+          summary_generated: boolean | null
           title: string
           updated_at: string
           upload_date: string
@@ -122,6 +124,8 @@ export type Database = {
           id?: string
           original_filename: string
           processing_status?: string | null
+          summary_data?: Json | null
+          summary_generated?: boolean | null
           title: string
           updated_at?: string
           upload_date?: string
@@ -140,6 +144,8 @@ export type Database = {
           id?: string
           original_filename?: string
           processing_status?: string | null
+          summary_data?: Json | null
+          summary_generated?: boolean | null
           title?: string
           updated_at?: string
           upload_date?: string
